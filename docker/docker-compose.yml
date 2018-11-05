@@ -1,0 +1,57 @@
+# Последняя версия docker-compose
+version: '3'
+
+# Создаем общую сеть default для всех контейнеров
+networks:
+  default:
+    driver: bridge
+
+# Создаем отдельные контейнеры
+services:
+
+  # Контейнер с php
+  fpm:
+    build:
+      context: ../
+      dockerfile: ./docker/fpm/Dockerfile
+    networks: 
+      - default
+    volumes:
+      - "../app:/var/www/app"
+
+  # Контейнер с nginx
+  nginx:
+    build:
+      context: ../
+      dockerfile: ./docker/nginx/Dockerfile
+    networks: 
+      - default    
+    # Показываем наружу 80 порт
+    ports: 
+      - "80:80"
+    volumes:
+      - "./nginx/conf:/etc/nginx/conf.d"
+      - "../app:/var/www/app"
+    # Грузим только когда будет готов php
+    depends_on:
+      - fpm
+
+  # Контейнер с базой данных
+  db:
+    # Использую mysql 5 тк в версии 8 сложнее делать подключение для отладки
+    image: mysql:5
+    # Подключаем к общей сети с другими контейнерами
+    networks: 
+      - default
+    # Показываем наружу порт
+    ports:
+      - "3336:3306"
+    # Задачем параметры для инициализации БД
+    environment:
+      # Пароль к БД
+      MYSQL_ROOT_PASSWORD: root
+      # Создаваемая по умолчанию бд
+      MYSQL_DATABASE: yii-template-db
+    # Линкуем внещнюю папку для хранения БД
+    volumes:
+      - "./database:/var/lib/mysql"
