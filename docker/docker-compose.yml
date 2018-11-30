@@ -6,8 +6,19 @@ networks:
   default:
     driver: bridge
 
+volumes:
+  app_volume:
+
 # Создаем отдельные контейнеры
 services:
+
+  # Контейнер с кодом
+  data:
+    build:
+      context: ../
+      dockerfile: ./docker/data/Dockerfile
+    volumes:
+      - "app_volume:/app"
 
   # Контейнер с php
   fpm:
@@ -17,7 +28,9 @@ services:
     networks: 
       - default
     volumes:
-      - "../app:/var/www/app"
+      - "app_volume:/var/www/app"
+    depends_on:
+      - data
 
   # Контейнер с nginx
   nginx:
@@ -31,10 +44,11 @@ services:
       - "80:80"
     volumes:
       - "./nginx/conf:/etc/nginx/conf.d"
-      - "../app:/var/www/app"
+      - "app_volume:/var/www/app"
     # Грузим только когда будет готов php
     depends_on:
       - fpm
+      - data
 
   # Контейнер с базой данных
   db:

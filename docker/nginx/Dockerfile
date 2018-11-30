@@ -1,7 +1,7 @@
 FROM nginx
 
 # Добавляем PHP-исходники нашего веб приложения
-ADD app /var/www/app
+#ADD app /var/www/app
 
 # Добавляем наш конфиг
 ADD docker/nginx/conf/default.conf /etc/nginx/conf.d/default.conf
